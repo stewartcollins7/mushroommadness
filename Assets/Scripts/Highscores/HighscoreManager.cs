@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml;
+using System.Xml.Serialization;
 using System.IO;
 
 public class HighscoreManager {
@@ -106,14 +106,14 @@ public class HighscoreManager {
     private void save()
     {
         //Serialises the file
-        BinaryFormatter bf = new BinaryFormatter();
+        XmlSerializer serializer = new XmlSerializer(typeof(HighscoreData));
         //Accesses the file
-        FileStream file = File.Open(Application.persistentDataPath + "/save.dat", FileMode.Create);
+        FileStream file = File.Open(Application.persistentDataPath + "/save.xml", FileMode.Create);
 
         //Serialise
-        bf.Serialize(file, getInfo());
+        serializer.Serialize(file, data);
         //Close the file
-        file.Close();
+        file.Dispose();
     }
 
     //Returns saved game info
@@ -125,12 +125,12 @@ public class HighscoreManager {
         if (data == null)
         {
             //If saved file exists then load save file
-            if (File.Exists(Application.persistentDataPath + "/save.dat"))
+            if (File.Exists(Application.persistentDataPath + "/save.xml"))
             {
-                BinaryFormatter bf = new BinaryFormatter();
-                FileStream file = File.Open(Application.persistentDataPath + "/save.dat", FileMode.Open);
-                data = (HighscoreData)bf.Deserialize(file);
-                file.Close();
+                XmlSerializer serializer = new XmlSerializer(typeof(HighscoreData));
+                FileStream file = File.Open(Application.persistentDataPath + "/save.xml", FileMode.Open);
+                data = (HighscoreData)serializer.Deserialize(file);
+                file.Dispose();
             }//Otherwise create new highscore file with empty scores
             else
             {

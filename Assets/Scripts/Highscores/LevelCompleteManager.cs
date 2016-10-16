@@ -45,14 +45,11 @@ public class LevelCompleteManager : MonoBehaviour {
         SceneManager.LoadScene("MainMenu");
     }
 
-    public void SubmitHighScore()
+    public void SubmitHighScore(string initials)
     {
-        string initials = initialsInput.text;
-        if (initials.Equals(""))
-        {
-            return;
-        }
+        Debug.Log("test");
         hsMgr.AddHighScore(levelInfo.levelNumber, finalScore, initials);
+        Debug.Log("test2");
         enterHighScorePanel.SetActive(false);
         PrintHighscore();
     }
@@ -73,12 +70,12 @@ public class LevelCompleteManager : MonoBehaviour {
         scoreInfo += "\nLeaves Brushed\t\t\t" + levelInfo.leavesBrushed + "\t\tx15\t\t  " + (levelInfo.leavesBrushed * LEAFPOINTS);
         scoreInfoText.text = scoreInfo;
         yield return new WaitForSeconds(waitTime);
-        scoreInfo += "\nTarget Mushrooms\t" + levelInfo.GetNumberOfDesiredMushrooms() + "\t\tx420\t\t  " + (levelInfo.GetNumberOfDesiredMushrooms() * CORRECTMUSHROOMPOINTS);
+        scoreInfo += "\nTarget Mushrooms\t\t" + levelInfo.GetNumberOfDesiredMushrooms() + "\t\tx420\t\t  " + (levelInfo.GetNumberOfDesiredMushrooms() * CORRECTMUSHROOMPOINTS);
         scoreInfoText.text = scoreInfo;
         yield return new WaitForSeconds(waitTime);
         scoreInfoText.text = scoreInfo;
         int incorrectMushrooms = levelInfo.mushroomCount - levelInfo.GetNumberOfDesiredMushrooms();
-        scoreInfo += "\nWrong Mushrooms\t\t" + incorrectMushrooms + "\t\tx-100\t";
+        scoreInfo += "\nWrong Mushrooms\t\t" + incorrectMushrooms + "\t\tx-100\t\t";
         if (incorrectMushrooms == 0) {
             scoreInfo += "  0";
         }else

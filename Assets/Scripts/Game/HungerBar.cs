@@ -44,12 +44,18 @@ public class HungerBar : MonoBehaviour {
 
     void Update()
     {
-        if(gameManager.GetGameState() == GameManager.GameState.START || tripping)
+        if(gameManager.GetGameState() == GameManager.GameState.START)
         {
             return;
         }
-
-        hunger -= Time.deltaTime * HUNGERDECREASESPEED;
+        if (tripping)
+        {
+            hunger -= Time.deltaTime * HUNGERDECREASESPEED / 2;
+        }else
+        {
+            hunger -= Time.deltaTime * HUNGERDECREASESPEED;
+        }
+        
         if(hunger <= 0)
         {
             gameManager.HungerDepleted();

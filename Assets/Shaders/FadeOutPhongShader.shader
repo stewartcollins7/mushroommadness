@@ -28,7 +28,6 @@ Shader "Unlit/PhongShader"
 	{
 		_PointLightColor("Point Light Color", Color) = (0.5, 0.5, 0.5)
 		_PointLightPosition("Point Light Position", Vector) = (132.0, 66.0, 7.0)
-		//_Opacity("Grass Opacity", Float) = (0.5f)
 	}
 	SubShader
 	{
@@ -78,7 +77,9 @@ Shader "Unlit/PhongShader"
 				// Transform vertex in world coordinates to camera coordinates, and pass colour
 				o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
 				o.color = v.color;
-				//o.color.a = _Opacity;
+
+				//This opacity used to fade out the item when it is swiped on screen (for fade out shader)
+				o.color.a = _Opacity;
 
 				// Pass out the world vertex position and world normal to be interpolated
 				// in the fragment shader (and utilised)

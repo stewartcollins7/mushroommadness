@@ -22,11 +22,10 @@ public class GameManager : MonoBehaviour {
     private Text mushroomCountText;
     private CurrentLevelInfo levelInfo;
     private OnScreenText screenMessage;
-    public Vector2 mousePositionStart;
-    public Vector2 mousePositionHold;
+    private Vector2 screenPositionStart;
+    private Vector2 screenPositionHold;
     private GameObject hitObject = null;
     public float swipeThreshold = 5f;
-    public GameObject trippingEffect;
     private MainCamera mainCamera;
     private int grassPlucked = 0;
     private int leavesBrushed = 0;
@@ -148,14 +147,38 @@ public class GameManager : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if(gameState == GameState.PICKING)
+        bool buttonDown = false;
+        bool inputEnded = false;
+        Vector2 screenPosition = Vector2.zero;
+        if (gameState == GameState.PICKING)
         {
-            if (Input.GetMouseButtonDown(0))
+#if UNITY_WSA
+            if (Input.touchCount > 0)
+            {
+                Touch firstTouch = Input.touches[0];
+                if (firstTouch.phase == TouchPhase.Began)
+                {
+                    buttonDown = true;
+                    
+                }else if(firstTouch.phase == TouchPhase.Ended)
+                {
+                    inputEnded = true;
+                }
+                screenPosition = firstTouch.position;
+            }
+#else
+            buttonDown = Input.GetButtonDown(0);
+            if(!buttonDown){
+                inputEnded = Input.GetMouseButtonUp(0);
+            }screenPosition = Input.mousePosition;
+            
+#endif
+            if (buttonDown)
             {
                 RaycastHit rayHit;
-                mousePositionStart = Input.mousePosition;
-                mousePositionHold = mousePositionStart;
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                screenPositionStart = screenPosition;
+                screenPositionHold = screenPosition;
+                Ray ray = Camera.main.ScreenPointToRay(screenPosition);
                 if (Physics.Raycast(ray, out rayHit, 200))
                 {
                     hitObject = rayHit.collider.gameObject;
@@ -166,25 +189,26 @@ public class GameManager : MonoBehaviour {
                     hitObject = null;
                 }
             }
-            else if (Input.GetMouseButtonUp(0))
+            
+            else if (inputEnded)
             {
                 if(hitObject == null)
                 {
                     return;
                 }
                 //For some reason it treats mouse position as a vector 3 so I can't create mouseDifference in 1 line
-                Vector2 mouseDifference = Input.mousePosition;
-                mouseDifference -= mousePositionStart;
-                mouseDifference.x = Mathf.Abs(mouseDifference.x);
-                mouseDifference.y = Mathf.Abs(mouseDifference.y);
+                Vector2 inputDifference = screenPosition;
+                inputDifference -= screenPositionStart;
+                inputDifference.x = Mathf.Abs(inputDifference.x);
+                inputDifference.y = Mathf.Abs(inputDifference.y);
 
-                if (mouseDifference.y > swipeThreshold && hitObject.GetComponent<GrassScript>() != null)
+                if (inputDifference.y > swipeThreshold && hitObject.GetComponent<GrassScript>() != null)
                 {
                     GrassScript objectScript = hitObject.GetComponent<GrassScript>();
                     objectScript.PullGrass();
                     grassPlucked++;
                 }
-                else if (mouseDifference.x > swipeThreshold && hitObject.GetComponent<LeafScript>() != null)
+                else if (inputDifference.x > swipeThreshold && hitObject.GetComponent<LeafScript>() != null)
                 {
                     LeafScript objectScript = hitObject.GetComponent<LeafScript>();
                     objectScript.BrushLeaf(true);
@@ -200,16 +224,46 @@ public class GameManager : MonoBehaviour {
             }
         }else if(gameState == GameState.INSPECTING)
         {
-            if (Input.GetMouseButton(0))
+#if UNITY_WSA
+            if(Input.acceleration.x > 0.5)
             {
-                Vector2 mouseDifference = Input.mousePosition;
-                mouseDifference -= mousePositionHold;
+                TossIt();
+                return;
+            }else if(Input.acceleration.x < -0.5)
+            {
+                KeepIt();
+                return;
+            }else if(Input.acceleration.z > 0.5)
+            {
+                EatIt();
+                return;
+            }
+
+            
+            if (Input.touchCount > 0)
+            {
+                Touch firstTouch = Input.touches[0];
+                if (firstTouch.phase == TouchPhase.Began || firstTouch.phase == TouchPhase.Moved)
+                {
+                    buttonDown = true;
+
+                }
+                screenPosition = firstTouch.position;
+            }
+#else
+            buttonDown = Input.GetMouseButton(0);
+            screenPosition = Input.mousePosition;
+#endif
+            if (buttonDown)
+            {
+                Vector2 screenDifference = screenPosition;
+                screenDifference -= screenPositionHold;
                 float turnSpeed = 0.2f;
-                Vector3 rotatePosition = new Vector3(mouseDifference.y * turnSpeed, 0, mouseDifference.x * turnSpeed );
+                Vector3 rotatePosition = new Vector3(screenDifference.y * turnSpeed, 0, screenDifference.x * turnSpeed );
                 currentMushroom.Rotate(rotatePosition);   
             }
 
-            mousePositionHold = Input.mousePosition;
+            screenPositionHold = screenPosition;
         }
         
 	}
