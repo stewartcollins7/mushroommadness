@@ -22,6 +22,12 @@
 // Adapted further by Chris Ewin, 23 Sep 2013
 // Adapted further (again) by Alex Zable (port to Unity), 19 Aug 2016
 
+/*
+** Adapted by Stewart Collins - 326206
+** 17/10/2016
+**
+*/
+
 Shader "Unlit/PhongShader"
 {
 	Properties
@@ -108,12 +114,11 @@ Shader "Unlit/PhongShader"
 				float3 dif = fAtt * _PointLightColor.rgb * Kd * v.color.rgb * saturate(LdotN);
 
 				// Calculate specular reflections
-				float Ks = 1;
+				// Specular reflections reduced as shader used for grass and leaves that do not
+				// cast a lot of reflections
+				float Ks = 0.2;
 				float specN = 5; // Values>>1 give tighter highlights
 				float3 V = normalize(_WorldSpaceCameraPos - v.worldVertex.xyz);
-				// Using classic reflection calculation:
-				//float3 R = normalize((2.0 * LdotN * interpNormal) - L);
-				//float3 spe = fAtt * _PointLightColor.rgb * Ks * pow(saturate(dot(V, R)), specN);
 				// Using Blinn-Phong approximation:
 				specN = 25; // We usually need a higher specular power when using Blinn-Phong
 				float3 H = normalize(V + L);
@@ -122,6 +127,8 @@ Shader "Unlit/PhongShader"
 				// Combine Phong illumination model components
 				float4 returnColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 				returnColor.rgb = amb.rgb + dif.rgb + spe.rgb;
+
+				//This a is used to fade out the object when it is being destroyed and is rapidly
 				returnColor.a = v.color.a;
 
 				return returnColor;

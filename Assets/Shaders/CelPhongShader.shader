@@ -22,20 +22,20 @@
 // Adapted further by Chris Ewin, 23 Sep 2013
 // Adapted further (again) by Alex Zable (port to Unity), 19 Aug 2016
 
+/* Further adapted by Stewart Collins - 326206
+** 17/10/16
+** Adapted the shader to make it a cel shader
+*/
+
 Shader "Unlit/CelShader"
 {
 	Properties
 	{
 		_PointLightColor("Point Light Color", Color) = (255, 255, 255)
 		_PointLightPosition("Point Light Position", Vector) = (132.0, 66.0, 7.0)
-		//_Opacity("Grass Opacity", Float) = (0.5f)
 	}
 		SubShader
 	{
-		Tags{ "Queue" = "Transparent"
-		"RenderType" = "Transparent" }
-		Blend SrcAlpha OneMinusSrcAlpha
-
 		Pass
 	{
 		CGPROGRAM
@@ -43,11 +43,13 @@ Shader "Unlit/CelShader"
 #pragma fragment frag
 
 #include "UnityCG.cginc"
-
+	//The amount of colors in the cel shader palette
 	#define MAX_COLORS 8
 
 	uniform float3 _PointLightColor;
 	uniform float3 _PointLightPosition;
+
+	//The available cel shader colors
 	uniform float3 _CelShadingColors[MAX_COLORS];
 
 
@@ -81,7 +83,6 @@ Shader "Unlit/CelShader"
 		// Transform vertex in world coordinates to camera coordinates, and pass colour
 		o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
 		o.color = v.color;
-		//o.color.a = _Opacity;
 
 		// Pass out the world vertex position and world normal to be interpolated
 		// in the fragment shader (and utilised)
@@ -110,12 +111,10 @@ Shader "Unlit/CelShader"
 		float3 dif = fAtt * _PointLightColor.rgb * Kd * v.color.rgb * saturate(LdotN);
 
 		// Calculate specular reflections
-		float Ks = 1;
+		// Specular reflections were reduced as mushrooms do not provide much direct reflection
+		float Ks = 0.5;
 		float specN = 5; // Values>>1 give tighter highlights
 		float3 V = normalize(_WorldSpaceCameraPos - v.worldVertex.xyz);
-		// Using classic reflection calculation:
-		//float3 R = normalize((2.0 * LdotN * interpNormal) - L);
-		//float3 spe = fAtt * _PointLightColor.rgb * Ks * pow(saturate(dot(V, R)), specN);
 		// Using Blinn-Phong approximation:
 		specN = 25; // We usually need a higher specular power when using Blinn-Phong
 		float3 H = normalize(V + L);
@@ -124,12 +123,13 @@ Shader "Unlit/CelShader"
 		// Combine Phong illumination model components
 		float4 returnColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 		returnColor.rgb = amb.rgb + dif.rgb + spe.rgb;
-		returnColor.a = v.color.a;
-		//float4 celShaded = returnColor;
-		//celShaded.rgb *= 255;
-		//float celSize = 20;
+
+		//Below is the cel shading component of the shader
+		//It calculates the return color by finding the color which has the lowest total difference in the
+		//rgb values from the available color palette and then returning that color
 		float4 celColor = float4(0.0f, 0.0f, 0.0f, 1.0); 
 		celColor.rgb = _CelShadingColors[0].rgb;
+		//All color values are between 0 and 1
 		float currentCelDiff = 500;
 		currentCelDiff = (abs(returnColor.r - celColor.r) + abs(returnColor.g - celColor.g) + abs(returnColor.b - celColor.b));
 		float4 newCelColor = float4(0.0f, 0.0f, 0.0f, 1.0);
@@ -142,11 +142,6 @@ Shader "Unlit/CelShader"
 				currentCelDiff = newCelDiff;
 			}
 		}
-		//celShaded.r = (celShaded.r - fmod(celShaded.r, celSize));
-		//celShaded.g = (celShaded.g - fmod(celShaded.g, celSize));
-		//celShaded.b = (celShaded.b - fmod(celShaded.b, celSize));
-		//celShaded.rgb /= 255;
-		//return returnColor;
 		return celColor;
 	}
 		ENDCG
