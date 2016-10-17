@@ -146,5 +146,7 @@ Shader "Unlit/CelShader"
 	}
 		ENDCG
 	}
+	
 	}
+	Fallback "Diffuse"
 }
