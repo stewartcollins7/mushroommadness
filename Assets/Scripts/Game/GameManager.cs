@@ -167,7 +167,7 @@ public class GameManager : MonoBehaviour {
                 screenPosition = firstTouch.position;
             }
 #else
-            buttonDown = Input.GetButtonDown(0);
+            buttonDown = Input.GetMouseButtonDown(0);
             if(!buttonDown){
                 inputEnded = Input.GetMouseButtonUp(0);
             }screenPosition = Input.mousePosition;
